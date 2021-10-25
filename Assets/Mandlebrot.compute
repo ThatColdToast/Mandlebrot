@@ -1,0 +1,76 @@
+#pragma kernel CSMain
+
+RWTexture2D<float4> Image;
+
+int currentGeneration;
+
+float zoom;
+float2 offset;
+
+float2 JuliaOffset;
+bool mandlebrot;
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    // Get the dimensions of the RenderTexture
+    uint width, height;
+    Image.GetDimensions(width, height);
+
+    // int2 pos = int2(id.x / width, id.y / height);
+    float2 pos = float2(id.xy / float2(width, height) * zoom - (zoom * 0.5));
+    pos += offset;
+
+    // Trace and shade
+    float3 result = float3(0, 0, 0);
+
+    float a, b, c, d;
+
+    if(mandlebrot)
+    {
+        // Mandelbrot Set
+        a = 0;
+        b = 0;
+        c = pos.x;
+        d = pos.y;
+    } else {
+        // Julia Set
+        a = pos.x;
+        b = pos.y;
+        c = JuliaOffset.x;
+        d = JuliaOffset.y;
+    }
+
+    
+
+   
+
+    uint num = 100;
+    for(uint i = 0; i < num; i++)
+    {
+        float _a = (a*a) - (b*b);
+        float _b = 2 * a * b;
+
+        a = _a + c;
+        b = _b + d;
+
+        float len = length(float2(a, b));
+
+        if(len > 2)
+        {
+            float c = (i+1) / (num * .2);
+            result = float3(c, 0, 1);
+        }
+    }
+
+    
+
+    // if(len < 1)
+    // {
+    //     result = float3(0, 0, 0);
+    // } else {
+    //     result = float3(1, 1, 1);
+    // }
+
+    Image[id.xy] = float4(result, 1.0f);
+}
